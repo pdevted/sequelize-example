@@ -44,7 +44,7 @@ app.post('/post', (req, res) => {
   })
 })
 
-app.get('/findall', (req,res) => {
+app.get('/findall', (req, res) => {
   User.findAll({
     where: {
       name: {
@@ -52,6 +52,17 @@ app.get('/findall', (req,res) => {
       }
     }
   })
+  .then(user => {
+    res.json(user);
+  })
+  .catch(error => {
+    console.log(error);
+    res.status(404).send(error);
+  })
+})
+
+app.get('/findOne', (req, res) => {
+  User.findByPk('55')
     .then(user => {
       res.json(user);
     })
@@ -59,6 +70,32 @@ app.get('/findall', (req,res) => {
       console.log(error);
       res.status(404).send(error);
     })
+})
+
+app.put('/update', (req, res) => {
+  User.update({
+    name: 'ted Kim', password: 'password'
+  }, { where: { id: 55 } })
+    .then(rows => {
+      res.json(rows);
+    })
+    .catch(error => {
+      console.log(error);
+      res.status(404).send(error);
+    })
+})
+
+app.delete('/remove', (req, res) => {
+  User.destroy({
+    where: { id: 50 }
+  })
+  .then(() => {
+    res.send('User successfully deleted');
+  })
+  .catch(error => {
+    console.log(error);
+    res.status(404).send(error);
+  })
 })
 
 connection
