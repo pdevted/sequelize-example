@@ -1,5 +1,6 @@
 const express = require('express');
 const Sequelize = require('sequelize');
+const _USERS = require('./users.json');
 
 const app = express();
 const port = 8001;
@@ -8,80 +9,38 @@ const connection = new Sequelize('db', 'user', 'pass', {
   host: 'localhost',
   dialect: 'sqlite',
   storage: 'db.sqlite',
-  operatorsAliases: false,
-  define: {
-    freezeTableName: true
-  }
+  operatorsAliases: false
 })
 
 const User = connection.define('User', {
-  uuid: {
-    type: Sequelize.UUID,
-    primaryKey: true,
-    defaultValue: Sequelize.UUIDV4
-  },
-  name: {
+  name: Sequelize.STRING,
+  email: {
     type: Sequelize.STRING,
     validate: {
-      len: [3]
+      isEmail: true
     }
   },
-  first: Sequelize.STRING,
-  last: Sequelize.STRING,
-  full_name: Sequelize.STRING,
-  bio: {
-    type: Sequelize.TEXT,
+  password: {
+    type: Sequelize.STRING,
     validate: {
-      contains: {
-        args: ['foo'],
-        msg: 'Error: Field must contain foo'
-      }
+      isAlphanumeric: true
     }
   }
-}, {
-  timestamps: false,
-  hooks: {
-    beforeValidate: () => {
-      console.log('before validate');
-    },
-    afterValidate: () => {
-      console.log('after validate');
-    },
-    beforeCreate: (user) => {
-      user.full_name = `${user.first} ${user.last}`;
-      console.log('before create');
-    },
-    afterCreate: () => {
-      console.log('after create');
-    }
-  }
-})
-
-app.get('/', (req, res) => {
-  User.create({
-    name: 'Jo',
-    bio: 'New bio entry 2'
-  })
-  .then(user => {
-    res.json(user);
-  })
-  .catch(error => {
-    console.log(error);
-    res.status(404).send(error);
-  })
 })
 
 connection
-  .sync( {
-    logging: console.log,
+  .sync({
+    // logging: console.log,
     force: true
   })
   .then (() => {
-    User.create({
-      first: 'Joe',
-      last: 'Smith',
-      bio: 'New bio here'
-    })
+    User.bulkCreate(_USERS)
+      .then(users => {
+        console.log('Success adding users');
+      })
+      .catch(error => {
+        console.log(error);
+      })
   })
   .then(() => {
     console.log('Connection to database established successfully');
