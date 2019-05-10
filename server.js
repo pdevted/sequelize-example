@@ -29,6 +29,16 @@ const User = connection.define('User', {
   }
 })
 
+const Post = connection.define('Post', {
+  id: {
+    primaryKey: true,
+    type: Sequelize.UUID,
+    defaultValue: Sequelize.UUIDV4
+  },
+  title: Sequelize.STRING,
+  content: Sequelize.TEXT
+})
+
 app.post('/post', (req, res) => {
   const newUser = req.body.user;
   User.create({
@@ -44,16 +54,12 @@ app.post('/post', (req, res) => {
   })
 })
 
-app.get('/findall', (req, res) => {
-  User.findAll({
-    where: {
-      name: {
-        [Op.like]: 'a%'
-      }
-    }
+app.get('/allposts', (req, res) => {
+  Post.findAll({
+    include: [User]
   })
-  .then(user => {
-    res.json(user);
+  .then(posts => {
+    res.json(posts);
   })
   .catch(error => {
     console.log(error);
@@ -61,57 +67,20 @@ app.get('/findall', (req, res) => {
   })
 })
 
-app.get('/findOne', (req, res) => {
-  User.findByPk('55')
-    .then(user => {
-      res.json(user);
-    })
-    .catch(error => {
-      console.log(error);
-      res.status(404).send(error);
-    })
-})
-
-app.put('/update', (req, res) => {
-  User.update({
-    name: 'ted Kim', password: 'password'
-  }, { where: { id: 55 } })
-    .then(rows => {
-      res.json(rows);
-    })
-    .catch(error => {
-      console.log(error);
-      res.status(404).send(error);
-    })
-})
-
-app.delete('/remove', (req, res) => {
-  User.destroy({
-    where: { id: 50 }
-  })
-  .then(() => {
-    res.send('User successfully deleted');
-  })
-  .catch(error => {
-    console.log(error);
-    res.status(404).send(error);
-  })
-})
+Post.belongsTo(User); // puts freignKey userId in Post table
 
 connection
   .sync({
     // logging: console.log,
     // force: true
   })
-  // .then (() => {
-  //   User.bulkCreate(_USERS)
-  //     .then(users => {
-  //       console.log('Success adding users');
-  //     })
-  //     .catch(error => {
-  //       console.log(error);
-  //     })
-  // })
+  .then (() => {
+    Post.create({
+      UserId: 1,
+      title: 'First post',
+      content: 'post content 1'  
+    })
+  })
   .then(() => {
     console.log('Connection to database established successfully');
   })
