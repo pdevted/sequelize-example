@@ -30,13 +30,12 @@ const User = connection.define('User', {
 })
 
 const Post = connection.define('Post', {
-  id: {
-    primaryKey: true,
-    type: Sequelize.UUID,
-    defaultValue: Sequelize.UUIDV4
-  },
   title: Sequelize.STRING,
   content: Sequelize.TEXT
+})
+
+const Comment = connection.define('Comment', {
+  the_comment: Sequelize.STRING
 })
 
 app.post('/post', (req, res) => {
@@ -54,9 +53,12 @@ app.post('/post', (req, res) => {
   })
 })
 
-app.get('/allposts', (req, res) => {
-  Post.findAll({
+app.get('/singlepost', (req, res) => {
+  Post.findByPk('1', {
     include: [{
+      model: Comment, as: 'All_Comments',
+      attributes: ['the_comment']
+    }, {
       model: User, as: 'UserRef'
     }]
   })
@@ -70,28 +72,55 @@ app.get('/allposts', (req, res) => {
 })
 
 Post.belongsTo(User, { as: 'UserRef', foreignKey: 'userId' }); // puts freignKey userId in Post table
+Post.hasMany(Comment, { as : 'All_Comments' });  // foreignKey = PostId in Comment table
 
 connection
   .sync({
     // logging: console.log,
-    force: true
+    // force: true
   })
-  .then(() => {
-    User.bulkCreate(_USERS)
-      .then(users => {
-        console.log('Success adding users');
-      })
-      .catch(error => {
-        console.log(error);
-      })
-  })
-  .then (() => {
-    Post.create({
-      userId: 1,
-      title: 'First post',
-      content: 'post content 1'  
-    })
-  })
+  // .then(() => {
+  //   User.bulkCreate(_USERS)
+  //     .then(users => {
+  //       console.log('Success adding users');
+  //     })
+  //     .catch(error => {
+  //       console.log(error);
+  //     })
+  // })
+  // .then (() => {
+  //   Post.create({
+  //     userId: 1,
+  //     title: 'First post',
+  //     content: 'post content 2'  
+  //   })
+  // })
+  // .then (() => {
+  //   Post.create({
+  //     userId: 2,
+  //     title: 'Second post',
+  //     content: 'post content 2'  
+  //   })
+  // })
+  // .then (() => {
+  //   Post.create({
+  //     userId: 1,
+  //     title: 'Third post',
+  //     content: 'post content 3'
+  //   })
+  // })
+  // .then (() => {
+  //   Comment.create({
+  //     PostId: 1,
+  //     the_comment: 'first comment'
+  //   })
+  // })
+  // .then (() => {
+  //   Comment.create({
+  //     PostId: 1,
+  //     the_comment: 'second comment here'
+  //   })
+  // })
   .then(() => {
     console.log('Connection to database established successfully');
   })
